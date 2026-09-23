@@ -31,12 +31,12 @@ public class AdminController {
 	public ResponseEntity<City> addCity(@Valid @RequestBody CityRequest cityRequest){
 		return ResponseEntity.ok(cityManagementService.addCity(cityRequest));
 	}
-	@GetMapping("/getCities")
+	@GetMapping
 	public ResponseEntity<Page<City>> getCities(Pageable pageable) {
 		return ResponseEntity.ok(weatherInfoService.getCities(pageable));
 
 	}
-	@DeleteMapping("/deleteCity/{id}")
+	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteCity(@PathVariable Long id){
 		cityManagementService.deleteCity(id);
 		return ResponseEntity.ok("City deleted");

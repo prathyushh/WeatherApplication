@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -42,6 +43,14 @@ public class GlobalExceptionHandler {
 				"City already exists");
 
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	}
+
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+
+		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 401, "Invalid username or password");
+
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
 
 	@ExceptionHandler(Exception.class)
