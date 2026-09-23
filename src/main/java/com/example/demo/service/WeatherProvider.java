@@ -1,7 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.WeatherResponse;
+import com.example.demo.entity.City;
 
 public interface WeatherProvider {
-       WeatherResponse getWeather(String city,String state);
+	WeatherResponse getWeather(City city);
 }
