@@ -24,7 +24,7 @@ public class CityManagementService {
 	}
 
 	public City addCity(CityRequest cityRequest) {
-		Optional<City> existingCity = cityRepository.findByCityAndState(cityRequest.getCity(), cityRequest.getState());
+		Optional<City> existingCity = cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(cityRequest.getCity(), cityRequest.getState());
 		if (existingCity.isPresent()) {
 			throw new CityAlreadyExistsException("City already exists!");
 		}

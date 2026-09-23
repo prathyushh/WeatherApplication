@@ -25,7 +25,7 @@ public class WeatherProviderService implements WeatherProvider {
 
 	@Override
 	public WeatherResponse getWeather(String cityname, String state) {
-		City city = cityRepository.findByCityAndState(cityname, state)
+		City city = cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(cityname, state)
 				.orElseThrow(() -> new CityNotFoundException("City not found!"));
 		try {
 			WeatherApiResponse response = restClient.get()

@@ -12,7 +12,7 @@ import com.example.demo.entity.City;
 @Repository
 public interface CityRepository extends JpaRepository<City, Long> {
 
-	Optional<City> findByCityAndState(String cityname, String state);
+	Optional<City> findByCityIgnoreCaseAndStateIgnoreCase(String cityname, String state);
 	Page<City> findAll(Pageable pageable);
 
 }

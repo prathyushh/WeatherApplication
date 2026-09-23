@@ -26,6 +26,8 @@ public class WeatherInfoService {
 	public WeatherResponse getWeather(String city,String state) {
 		return weatherProvider.getWeather(city, state);
 	}
+
+	
 	
 
 }
