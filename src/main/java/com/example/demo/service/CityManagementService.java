@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dto.CityRequest;
 import com.example.demo.dto.GeocodingLocation;
 import com.example.demo.entity.City;
-import com.example.demo.exception.CityAlreadyExistsException;
+import com.example.demo.exception.CityAlreadyExistException;
 import com.example.demo.exception.CityNotFoundException;
 import com.example.demo.repository.CityRepository;
 
@@ -42,7 +42,7 @@ public class CityManagementService {
 					cityRequest.getState());
 
 			if (existingCity.isPresent()) {
-				throw new CityAlreadyExistsException("City already exists!");
+				throw new CityAlreadyExistException("City already exists!");
 			}
 
 			GeocodingLocation location = locationProvider.getLocation(cityRequest.getCity(), cityRequest.getState(),
@@ -62,7 +62,7 @@ public class CityManagementService {
 
 		} catch (Exception ex) {
 
-			log.error("Failed to add city: {}, {}", cityRequest.getCity(), cityRequest.getState(), ex);
+			log.error("Failed to add city: {}, {}", cityRequest.getCity(), cityRequest.getState(), ex.getMessage());
 
 			throw ex;
 		}
@@ -87,7 +87,7 @@ public class CityManagementService {
 
 		} catch (Exception ex) {
 
-			log.error("Failed to delete city with id: {}", id, ex);
+			log.error("Failed to delete city with id: {}", id, ex.getMessage());
 
 			throw ex;
 		}

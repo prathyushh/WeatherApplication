@@ -13,7 +13,7 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 	private final SecretKey secretKey = Keys.hmacShaKeyFor("my-super-secret-key-my-super-secret-key-123456".getBytes());
-	private final long expirationTime = 1000 * 60 * 60 ;
+	private final long expirationTime = 1000 * 60  ;
 	private final long refreshTokenExpirationTime = 1000L * 60 * 60 * 24 * 7;
 
 	public String generateToken(UserDetails userDetails) {

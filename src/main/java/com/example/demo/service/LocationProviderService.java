@@ -51,7 +51,7 @@ public class LocationProviderService implements LocationProvider {
 
 		} catch (Exception ex) {
 
-			log.error("OpenWeather location API failed for {}, {}, {}", city, state, country, ex);
+			log.error("OpenWeather location API failed for {}, {}, {}", city, state, country, ex.getMessage());
 
 			throw new LocationApiException("Unable to retrieve location from OpenWeather");
 		}

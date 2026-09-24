@@ -44,7 +44,7 @@ public class AuditService {
         } catch (Exception ex) {
 
             log.error("Failed to save audit - user: {}, action: {}",
-                    username, action, ex);
+                    username, action, ex.getMessage());
 
             throw ex;
         }

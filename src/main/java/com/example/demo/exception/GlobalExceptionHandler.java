@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -29,11 +30,34 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorResponse);
 	}
 
-	@ExceptionHandler(CityAlreadyExistsException.class)
-	public ResponseEntity<ErrorResponse> handleCityAlreadyExistsException(CityAlreadyExistsException ex) {
+	@ExceptionHandler(CityAlreadyExistException.class)
+	public ResponseEntity<ErrorResponse> handleCityAlreadyExistsException(CityAlreadyExistException ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
 				ex.getMessage());
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	}
+
+	@ExceptionHandler(InvalidRefreshTokenException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+
+		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+	}
+
+	@ExceptionHandler(UserAlreadyExistException.class)
+	public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistException ex) {
+		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
+				ex.getMessage());
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<?> handleValidationException(MethodArgumentNotValidException ex) {
+
+		String message = ex.getBindingResult().getFieldError().getDefaultMessage();
+
+		return ResponseEntity.badRequest().body(message);
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)

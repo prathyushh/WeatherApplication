@@ -42,7 +42,7 @@ public class WeatherProviderService implements WeatherProvider {
 					response.getWind().getSpeed());
 
 		} catch (Exception ex) {
-			log.error("OpenWeather API failed for {}, {}", city.getLatitude(), city.getLongitude(), ex);
+			log.error("OpenWeather API failed for {}, {}", city.getLatitude(), city.getLongitude(), ex.getMessage());
 
 			throw new WeatherApiException("Unable to retrieve weather from OpenWeather");
 		}

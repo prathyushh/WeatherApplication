@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import java.util.Optional;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,8 +17,11 @@ import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.enums.Role;
+import com.example.demo.exception.InvalidRefreshTokenException;
+import com.example.demo.exception.UserAlreadyExistException;
 import com.example.demo.repository.UserRepository;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -43,14 +48,18 @@ public class AuthService {
 
 	@Transactional
 	public void registerUser(RegisterRequest request) {
-
+		Optional<User> existingUser = repository.findByUsername(request.getUsername());
+		if (existingUser.isPresent()) {
+			log.error("User already exists: {}", request.getUsername());
+			throw new UserAlreadyExistException("User already exists");
+		}
 		try {
 			String encodedPassword = passwordEncoder.encode(request.getPassword());
 
 			User user = new User();
 			user.setUsername(request.getUsername());
 			user.setPassword(encodedPassword);
-			user.setRole(Role.USER);
+			user.setRole(request.getRole());
 
 			repository.save(user);
 
@@ -60,7 +69,7 @@ public class AuthService {
 
 		} catch (Exception ex) {
 
-			log.error("User registration failed: {}", request.getUsername(), ex);
+			log.error("User registration failed: {}", request.getUsername(), ex.getMessage());
 
 			throw ex;
 		}
@@ -84,7 +93,7 @@ public class AuthService {
 
 		} catch (Exception ex) {
 
-			log.error("User authentication failed: {}", request.getUsername(), ex);
+			log.error("User authentication failed: {}", request.getUsername(), ex.getMessage());
 
 			throw ex;
 		}
@@ -100,7 +109,7 @@ public class AuthService {
 			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
 			if (!jwtService.validateToken(refreshToken, userDetails)) {
-				throw new RuntimeException("Invalid refresh token");
+				throw new InvalidRefreshTokenException("Invalid refresh token");
 			}
 
 			String newAccessToken = jwtService.generateToken(userDetails);
@@ -109,11 +118,11 @@ public class AuthService {
 
 			return new AuthResponse(newAccessToken, refreshToken);
 
-		} catch (Exception ex) {
+		} catch (JwtException ex) {
 
-			log.error("Token refresh failed", ex);
+			log.error("Token refresh failed", ex .getMessage());
 
-			throw ex;
+			throw new InvalidRefreshTokenException("Invalid refresh token");
 		}
 	}
 }
