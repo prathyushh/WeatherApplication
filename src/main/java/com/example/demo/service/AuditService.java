@@ -15,38 +15,36 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuditService {
 
-    private final AuditRepository auditRepository;
-    private final UserRepository userRepository;
+	private final AuditRepository auditRepository;
+	private final UserRepository userRepository;
 
-    public AuditService(AuditRepository auditRepository, UserRepository userRepository) {
-        this.auditRepository = auditRepository;
-        this.userRepository = userRepository;
-    }
+	public AuditService(AuditRepository auditRepository, UserRepository userRepository) {
+		this.auditRepository = auditRepository;
+		this.userRepository = userRepository;
+	}
 
-    public void logAction(String username, String action, String details) {
+	public void logAction(String username, String action, String details) {
 
-        try {
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+		try {
+			User user = userRepository.findByUsername(username)
+					.orElseThrow(() -> new RuntimeException("User not found"));
 
-            Audit audit = new Audit();
+			Audit audit = new Audit();
 
-            audit.setUserId(user.getId());
-            audit.setAction(action);
-            audit.setTimestamp(LocalDateTime.now());
-            audit.setDetails(details);
+			audit.setUserId(user.getId());
+			audit.setAction(action);
+			audit.setTimestamp(LocalDateTime.now());
+			audit.setDetails(details);
 
-            auditRepository.save(audit);
+			auditRepository.save(audit);
 
-            log.info("Audit saved successfully - user: {}, action: {}",
-                    username, action);
+			log.info("Audit saved successfully - user: {}, action: {}", username, action);
 
-        } catch (Exception ex) {
+		} catch (Exception ex) {
 
-            log.error("Failed to save audit - user: {}, action: {}",
-                    username, action, ex.getMessage());
+			log.error("Failed to save audit - user: {}, action: {}", username, action, ex.getMessage());
 
-            throw ex;
-        }
-    }
+			throw ex;
+		}
+	}
 }

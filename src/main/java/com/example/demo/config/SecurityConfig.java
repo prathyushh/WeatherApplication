@@ -36,34 +36,20 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
 			CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) {
-		http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(auth -> auth
-						
-							    .requestMatchers(
-							        "/auth/register",
-							        "/auth/login",
-							        "/auth/refresh",
-							        "/swagger-ui/**",
-							        "/swagger-ui.html",
-							        "/v3/api-docs/**"
-							    ).permitAll()
+		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
 
-							  
-							    .requestMatchers(HttpMethod.GET, "/getCities")
-							    .hasAnyRole("USER", "ADMIN")
+				.requestMatchers("/auth/register", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",
+						"/v3/api-docs/**")
+				.permitAll()
 
-							    .requestMatchers(HttpMethod.GET, "/getWeather")
-							    .hasAnyRole("USER", "ADMIN")
-							    .requestMatchers(HttpMethod.POST, "/addCity")
-							    .hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, "/getCities").hasAnyRole("USER", "ADMIN")
 
-						
-							    .requestMatchers(HttpMethod.DELETE, "/deleteCity/*")
-							    .hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, "/getWeather").hasAnyRole("USER", "ADMIN")
+				.requestMatchers(HttpMethod.POST, "/addCity").hasRole("ADMIN")
 
-							  
-							    .anyRequest().authenticated()
-							)
+				.requestMatchers(HttpMethod.DELETE, "/deleteCity/*").hasRole("ADMIN")
+
+				.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.exceptionHandling(exception -> exception.authenticationEntryPoint(authenticationEntryPoint)
 						.accessDeniedHandler(accessDeniedHandler));

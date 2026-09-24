@@ -10,25 +10,21 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-public class CustomAuthenticationEntryPoint
-        implements AuthenticationEntryPoint {
+public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    @Override
-    public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
-            throws IOException, ServletException {
+	@Override
+	public void commence(HttpServletRequest request, HttpServletResponse response,
+			AuthenticationException authException) throws IOException, ServletException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json");
 
-        response.getWriter().write("""
-                {
-                    "status": 401,
-                    "error": "UNAUTHORIZED",
-                    "message": "Authentication is required"
-                }
-                """);
-    }
+		response.getWriter().write("""
+				{
+				    "status": 401,
+				    "error": "UNAUTHORIZED",
+				    "message": "Authentication is required"
+				}
+				""");
+	}
 }

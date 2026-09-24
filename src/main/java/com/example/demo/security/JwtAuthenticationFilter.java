@@ -22,80 +22,58 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+	private final JwtService jwtService;
+	private final UserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(
-            JwtService jwtService,
-            UserDetailsService userDetailsService) {
+	public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
 
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
-    }
+		this.jwtService = jwtService;
+		this.userDetailsService = userDetailsService;
+	}
 
-    @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+		String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 
-            filterChain.doFilter(request, response);
-            return;
-        }
-        try {
-        String jwt = authHeader.substring(7);
+			filterChain.doFilter(request, response);
+			return;
+		}
+		try {
+			String jwt = authHeader.substring(7);
 
-        String username = jwtService.extractUsername(jwt);
+			String username = jwtService.extractUsername(jwt);
 
-        if (username != null &&
-                SecurityContextHolder.getContext()
-                        .getAuthentication() == null) {
+			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(username);
+				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtService.validateToken(jwt, userDetails)) {
+				if (jwtService.validateToken(jwt, userDetails)) {
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+							userDetails, null, userDetails.getAuthorities());
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
+					authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));	
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
-            }
-        }
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+				}
+			}
 
-        filterChain.doFilter(request, response);
-        }
-        catch (ExpiredJwtException e) {
+			filterChain.doFilter(request, response);
+		} catch (ExpiredJwtException e) {
 
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"error\":\"JWT token has expired\"}"
-            );
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"error\":\"JWT token has expired\"}");
 
-        } catch (JwtException e) {
+		} catch (JwtException e) {
 
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"error\":\"Invalid JWT token\"}"
-            );
-        }
-    }
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"error\":\"Invalid JWT token\"}");
+		}
+	}
 }

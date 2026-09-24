@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class WeatherRequest {
-  private String city;
-  private String state;
+	private String city;
+	private String state;
 }

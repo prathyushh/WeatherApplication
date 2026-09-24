@@ -18,13 +18,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table(name = "audits")
 public class Audit {
-	 @Id
-	 @GeneratedValue(strategy = GenerationType.IDENTITY)
-     private Long id;
-	 @Column(nullable = false)
-	 private Long userId;
-	 @Column(nullable = false)
-	 private String action;
-	 private LocalDateTime timestamp;
-	 private String details;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	@Column(nullable = false)
+	private Long userId;
+	@Column(nullable = false)
+	private String action;
+	private LocalDateTime timestamp;
+	private String details;
 }
