@@ -16,7 +16,6 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
-import com.example.demo.enums.Role;
 import com.example.demo.exception.InvalidRefreshTokenException;
 import com.example.demo.exception.UserAlreadyExistException;
 import com.example.demo.repository.UserRepository;
@@ -120,7 +119,7 @@ public class AuthService {
 
 		} catch (JwtException ex) {
 
-			log.error("Token refresh failed", ex .getMessage());
+			log.error("Token refresh failed", ex.getMessage());
 
 			throw new InvalidRefreshTokenException("Invalid refresh token");
 		}
