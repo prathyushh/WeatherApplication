@@ -68,7 +68,7 @@ public class AuthService {
 
 		} catch (Exception ex) {
 
-			log.error("User registration failed: {}", request.getUsername(), ex.getMessage());
+			log.error("User registration failed: {} : {}", request.getUsername(), ex.getMessage());
 
 			throw ex;
 		}
@@ -92,7 +92,7 @@ public class AuthService {
 
 		} catch (Exception ex) {
 
-			log.error("User authentication failed: {}", request.getUsername(), ex.getMessage());
+			log.error("User authentication failed: {} : {}", request.getUsername(), ex.getMessage());
 
 			throw ex;
 		}
@@ -119,7 +119,7 @@ public class AuthService {
 
 		} catch (JwtException ex) {
 
-			log.error("Token refresh failed", ex.getMessage());
+			log.error("Token refresh failed: {}", ex.getMessage());
 
 			throw new InvalidRefreshTokenException("Invalid refresh token");
 		}

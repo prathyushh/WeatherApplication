@@ -50,7 +50,7 @@ public class WeatherInfoService {
 
 		} catch (Exception ex) {
 
-			log.error("Failed to retrieve weather for: {}, {}", city, state, ex.getMessage());
+			log.error("Failed to retrieve weather for: {}, {} : {}", city, state, ex.getMessage());
 
 			throw ex;
 		}

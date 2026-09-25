@@ -50,7 +50,7 @@ public class CityManagementService {
 
 			City savedCity = City.builder().city(location.getCity()).countryCode(location.getCountry())
 					.state(location.getState()).longitude(location.getLon()).latitude(location.getLat()).build();
-
+            
 			cityRepository.save(savedCity);
 
 			auditService.logAction(getCurrentUsername(), "ADD_CITY", "City added: " + savedCity.getCity() + ", "
@@ -62,7 +62,7 @@ public class CityManagementService {
 
 		} catch (Exception ex) {
 
-			log.error("Failed to add city: {}, {}", cityRequest.getCity(), cityRequest.getState(), ex.getMessage());
+			log.error("Failed to add city: {}, {}:{}", cityRequest.getCity(), cityRequest.getState(), ex.getMessage());
 
 			throw ex;
 		}
@@ -87,7 +87,7 @@ public class CityManagementService {
 
 		} catch (Exception ex) {
 
-			log.error("Failed to delete city with id: {}", id, ex.getMessage());
+			log.error("Failed to delete city with id: {} :{}", id, ex.getMessage());
 
 			throw ex;
 		}
