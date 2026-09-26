@@ -30,8 +30,8 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorResponse);
 	}
 
-	@ExceptionHandler(CityAlreadyExistException.class)
-	public ResponseEntity<ErrorResponse> handleCityAlreadyExistsException(CityAlreadyExistException ex) {
+	@ExceptionHandler(CityAlreadyExistsException.class)
+	public ResponseEntity<ErrorResponse> handleCityAlreadyExistsException(CityAlreadyExistsException ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
 				ex.getMessage());
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
@@ -45,8 +45,8 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
 
-	@ExceptionHandler(UserAlreadyExistException.class)
-	public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistException ex) {
+	@ExceptionHandler(UserAlreadyExistsException.class)
+	public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
 				ex.getMessage());
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);

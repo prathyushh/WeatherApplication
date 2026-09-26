@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import com.example.demo.dto.GeocodingLocation;
+import com.example.demo.dto.GeocodingApiResponse;
 import com.example.demo.exception.LocationApiException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,15 +25,15 @@ public class LocationProviderService implements LocationProvider {
 	private String apiKey;
 
 	@Override
-	public GeocodingLocation getLocation(String city, String state, String country) {
+	public GeocodingApiResponse findLocation(String city, String state, String country) {
 
 		try {
-			GeocodingLocation[] locations = restClient.get()
+			GeocodingApiResponse[] locations = restClient.get()
 					.uri(uriBuilder -> uriBuilder.path("geo/1.0/direct").queryParam("q", city + "," + country)
 							.queryParam("limit", 5).queryParam("appId", apiKey).build())
-					.retrieve().body(GeocodingLocation[].class);
+					.retrieve().body(GeocodingApiResponse[].class);
 
-			GeocodingLocation location = Arrays.stream(locations)
+			GeocodingApiResponse location = Arrays.stream(locations)
 					.filter(loc -> loc.getCity().equalsIgnoreCase(city) && loc.getCountry().equalsIgnoreCase(country)
 							&& loc.getState().equalsIgnoreCase(state))
 					.findFirst()

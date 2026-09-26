@@ -26,14 +26,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.example.demo.dto.CityRequest;
-import com.example.demo.dto.GeocodingLocation;
+import com.example.demo.dto.CityResponse;
+import com.example.demo.dto.GeocodingApiResponse;
 import com.example.demo.entity.City;
-import com.example.demo.exception.CityAlreadyExistException;
+import com.example.demo.exception.CityAlreadyExistsException;
 import com.example.demo.exception.CityNotFoundException;
 import com.example.demo.repository.CityRepository;
 
 @ExtendWith(MockitoExtension.class)
-class CityManagementServiceTest {
+class CityServiceTest {
 
 	@Mock
 	private LocationProvider locationProvider;
@@ -45,7 +46,7 @@ class CityManagementServiceTest {
 	private AuditService auditService;
 
 	@InjectMocks
-	private CityManagementService cityManagementService;
+	private CityService cityManagementService;
 
 	@BeforeEach
 	void setUp() {
@@ -70,7 +71,7 @@ class CityManagementServiceTest {
 
 		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan")).thenReturn(Optional.empty());
 
-		GeocodingLocation location = new GeocodingLocation();
+		GeocodingApiResponse location = new GeocodingApiResponse();
 
 		location.setCity("Kota");
 		location.setState("Rajasthan");
@@ -78,9 +79,9 @@ class CityManagementServiceTest {
 		location.setLat(25.2138);
 		location.setLon(75.8648);
 
-		when(locationProvider.getLocation("Kota", "Rajasthan", "IN")).thenReturn(location);
+		when(locationProvider.findLocation("Kota", "Rajasthan", "IN")).thenReturn(location);
 
-		City result = cityManagementService.addCity(cityRequest);
+		City result = cityManagementService.createCity(cityRequest);
 
 		assertEquals("Kota", result.getCity());
 		assertEquals("Rajasthan", result.getState());
@@ -90,11 +91,11 @@ class CityManagementServiceTest {
 
 		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
 
-		verify(locationProvider).getLocation("Kota", "Rajasthan", "IN");
+		verify(locationProvider).findLocation("Kota", "Rajasthan", "IN");
 
 		verify(cityRepository).save(any(City.class));
 
-		verify(auditService).logAction(eq("admin"), eq("ADD_CITY"), eq("City added: Kota, Rajasthan, IN"));
+		verify(auditService).recordAudit(eq("admin"), eq("ADD_CITY"), eq("City added: Kota, Rajasthan, IN"));
 	}
 
 	@Test
@@ -111,16 +112,16 @@ class CityManagementServiceTest {
 		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan"))
 				.thenReturn(Optional.of(existingCity));
 
-		CityAlreadyExistException exception = assertThrows(CityAlreadyExistException.class,
-				() -> cityManagementService.addCity(cityRequest));
+		CityAlreadyExistsException exception = assertThrows(CityAlreadyExistsException.class,
+				() -> cityManagementService.createCity(cityRequest));
 
 		assertEquals("City already exists!", exception.getMessage());
 
-		verify(locationProvider, never()).getLocation(any(), any(), any());
+		verify(locationProvider, never()).findLocation(any(), any(), any());
 
 		verify(cityRepository, never()).save(any(City.class));
 
-		verify(auditService, never()).logAction(any(), any(), any());
+		verify(auditService, never()).recordAudit(any(), any(), any());
 	}
 
 	@Test
@@ -136,11 +137,30 @@ class CityManagementServiceTest {
 
 		when(cityRepository.findAll(pageable)).thenReturn(expectedPage);
 
-		Page<City> result = cityManagementService.getCities(pageable);
+		Page<CityResponse> result = cityManagementService.getCities(pageable);
 
 		assertSame(expectedPage, result);
 
 		assertEquals(2, result.getTotalElements());
+
+		verify(cityRepository).findAll(pageable);
+	}
+
+	@Test
+	void getCities_shouldReturnCities() {
+
+		Pageable pageable = PageRequest.of(0, 10);
+
+		City city = City.builder().city("Kota").state("Rajasthan").countryCode("IN").build();
+
+		Page<City> page = new PageImpl<>(java.util.List.of(city), pageable, 1);
+
+		when(cityRepository.findAll(pageable)).thenReturn(page);
+
+		Page<CityResponse> result = cityManagementService.getCities(pageable);
+
+		assertEquals(1, result.getTotalElements());
+		assertEquals("Kota", result.getContent().get(0).getCity());
 
 		verify(cityRepository).findAll(pageable);
 	}
@@ -160,7 +180,7 @@ class CityManagementServiceTest {
 
 		verify(cityRepository).delete(city);
 
-		verify(auditService).logAction(eq("admin"), eq("DELETE_CITY"), eq("City deleted: Kota"));
+		verify(auditService).recordAudit(eq("admin"), eq("DELETE_CITY"), eq("City deleted: Kota"));
 	}
 
 	@Test
@@ -179,6 +199,6 @@ class CityManagementServiceTest {
 
 		verify(cityRepository, never()).delete(any(City.class));
 
-		verify(auditService, never()).logAction(any(), any(), any());
+		verify(auditService, never()).recordAudit(any(), any(), any());
 	}
 }

@@ -23,7 +23,7 @@ public class AuditService {
 		this.userRepository = userRepository;
 	}
 
-	public void logAction(String username, String action, String details) {
+	public void recordAudit(String username, String action, String details) {
 
 		try {
 			User user = userRepository.findByUsername(username)

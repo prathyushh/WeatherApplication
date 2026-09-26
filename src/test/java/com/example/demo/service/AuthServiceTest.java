@@ -28,7 +28,7 @@ import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.enums.Role;
 import com.example.demo.exception.InvalidRefreshTokenException;
-import com.example.demo.exception.UserAlreadyExistException;
+import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.repository.UserRepository;
 
 import io.jsonwebtoken.JwtException;
@@ -76,7 +76,7 @@ class AuthServiceTest {
 
 		when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
 
-		authService.registerUser(request);
+		authService.register(request);
 
 		verify(repository).findByUsername("admin");
 
@@ -84,7 +84,7 @@ class AuthServiceTest {
 
 		verify(repository).save(any(User.class));
 
-		verify(auditService).logAction("admin", "REGISTER", "User registered successfully");
+		verify(auditService).recordAudit("admin", "REGISTER", "User registered successfully");
 	}
 
 	@Test
@@ -102,8 +102,8 @@ class AuthServiceTest {
 
 		when(repository.findByUsername("admin")).thenReturn(Optional.of(existingUser));
 
-		UserAlreadyExistException exception = assertThrows(UserAlreadyExistException.class,
-				() -> authService.registerUser(request));
+		UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class,
+				() -> authService.register(request));
 
 		assertEquals("User already exists", exception.getMessage());
 
@@ -113,7 +113,7 @@ class AuthServiceTest {
 
 		verify(passwordEncoder, never()).encode(any(String.class));
 
-		verify(auditService, never()).logAction(any(), any(), any());
+		verify(auditService, never()).recordAudit(any(), any(), any());
 	}
 
 	@Test
@@ -132,7 +132,7 @@ class AuthServiceTest {
 
 		when(jwtService.generateRefreshToken(userDetails)).thenReturn("refresh-token");
 
-		AuthResponse response = authService.loginUser(request);
+		AuthResponse response = authService.login(request);
 
 		assertEquals("access-token", response.getAccessToken());
 
@@ -157,7 +157,7 @@ class AuthServiceTest {
 
 		when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(exception);
 
-		RuntimeException result = assertThrows(RuntimeException.class, () -> authService.loginUser(request));
+		RuntimeException result = assertThrows(RuntimeException.class, () -> authService.login(request));
 
 		assertEquals("Invalid credentials", result.getMessage());
 

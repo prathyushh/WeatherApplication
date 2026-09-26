@@ -17,7 +17,7 @@ import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.exception.InvalidRefreshTokenException;
-import com.example.demo.exception.UserAlreadyExistException;
+import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.repository.UserRepository;
 
 import io.jsonwebtoken.JwtException;
@@ -46,11 +46,11 @@ public class AuthService {
 	}
 
 	@Transactional
-	public void registerUser(RegisterRequest request) {
+	public void register(RegisterRequest request) {
 		Optional<User> existingUser = repository.findByUsername(request.getUsername());
 		if (existingUser.isPresent()) {
 			log.error("User already exists: {}", request.getUsername());
-			throw new UserAlreadyExistException("User already exists");
+			throw new UserAlreadyExistsException("User already exists");
 		}
 		try {
 			String encodedPassword = passwordEncoder.encode(request.getPassword());
@@ -64,7 +64,7 @@ public class AuthService {
 
 			log.info("User registered successfully: {}", user.getUsername());
 
-			auditService.logAction(user.getUsername(), "REGISTER", "User registered successfully");
+			auditService.recordAudit(user.getUsername(), "REGISTER", "User registered successfully");
 
 		} catch (Exception ex) {
 
@@ -74,7 +74,7 @@ public class AuthService {
 		}
 	}
 
-	public AuthResponse loginUser(LoginRequest request) {
+	public AuthResponse login(LoginRequest request) {
 
 		try {
 			Authentication authentication = manager.authenticate(

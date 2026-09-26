@@ -1,7 +1,5 @@
 package com.example.demo.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -15,22 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class WeatherInfoService {
+public class WeatherService {
 
 	private final CityRepository cityRepository;
 	private final WeatherProvider weatherProvider;
 	private final AuditService auditService;
 
-	public WeatherInfoService(CityRepository cityRepository, WeatherProvider weatherProvider,
-			AuditService auditService) {
+	public WeatherService(CityRepository cityRepository, WeatherProvider weatherProvider, AuditService auditService) {
 
 		this.cityRepository = cityRepository;
 		this.weatherProvider = weatherProvider;
 		this.auditService = auditService;
-	}
-
-	public Page<City> getCities(Pageable pageable) {
-		return cityRepository.findAll(pageable);
 	}
 
 	public WeatherResponse getWeather(String city, String state) {
@@ -41,7 +34,7 @@ public class WeatherInfoService {
 
 			WeatherResponse response = weatherProvider.getWeather(cityEntity);
 
-			auditService.logAction(getCurrentUsername(), "GET_WEATHER",
+			auditService.recordAudit(getCurrentUsername(), "GET_WEATHER",
 					"Weather requested for: " + city + ", " + state);
 
 			log.info("Weather retrieved successfully: {}, {}", city, state);

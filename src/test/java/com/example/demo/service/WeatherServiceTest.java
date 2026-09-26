@@ -17,10 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -30,7 +26,7 @@ import com.example.demo.exception.CityNotFoundException;
 import com.example.demo.repository.CityRepository;
 
 @ExtendWith(MockitoExtension.class)
-class WeatherInfoServiceTest {
+class WeatherServiceTest {
 
 	@Mock
 	private CityRepository cityRepository;
@@ -42,7 +38,7 @@ class WeatherInfoServiceTest {
 	private AuditService auditService;
 
 	@InjectMocks
-	private WeatherInfoService weatherInfoService;
+	private WeatherService weatherInfoService;
 
 	@BeforeEach
 	void setUp() {
@@ -54,25 +50,6 @@ class WeatherInfoServiceTest {
 	void tearDown() {
 
 		SecurityContextHolder.clearContext();
-	}
-
-	@Test
-	void getCities_shouldReturnCities() {
-
-		Pageable pageable = PageRequest.of(0, 10);
-
-		City city = City.builder().city("Kota").state("Rajasthan").countryCode("IN").build();
-
-		Page<City> page = new PageImpl<>(java.util.List.of(city), pageable, 1);
-
-		when(cityRepository.findAll(pageable)).thenReturn(page);
-
-		Page<City> result = weatherInfoService.getCities(pageable);
-
-		assertEquals(1, result.getTotalElements());
-		assertEquals("Kota", result.getContent().get(0).getCity());
-
-		verify(cityRepository).findAll(pageable);
 	}
 
 	@Test
@@ -99,7 +76,7 @@ class WeatherInfoServiceTest {
 
 		verify(weatherProvider).getWeather(city);
 
-		verify(auditService).logAction(eq("admin"), eq("GET_WEATHER"), eq("Weather requested for: Kota, Rajasthan"));
+		verify(auditService).recordAudit(eq("admin"), eq("GET_WEATHER"), eq("Weather requested for: Kota, Rajasthan"));
 	}
 
 	@Test
@@ -116,6 +93,6 @@ class WeatherInfoServiceTest {
 
 		verify(weatherProvider, never()).getWeather(any(City.class));
 
-		verify(auditService, never()).logAction(any(), any(), any());
+		verify(auditService, never()).recordAudit(any(), any(), any());
 	}
 }

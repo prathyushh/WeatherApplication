@@ -42,12 +42,10 @@ public class SecurityConfig {
 						"/v3/api-docs/**")
 				.permitAll()
 
-				.requestMatchers(HttpMethod.GET, "/getCities").hasAnyRole("USER", "ADMIN")
-
-				.requestMatchers(HttpMethod.GET, "/getWeather").hasAnyRole("USER", "ADMIN")
-				.requestMatchers(HttpMethod.POST, "/addCity").hasRole("ADMIN")
-
-				.requestMatchers(HttpMethod.DELETE, "/deleteCity/*").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.GET, "/api/cities").hasAnyRole("USER", "ADMIN")
+				.requestMatchers(HttpMethod.GET, "/api/weather").hasAnyRole("USER", "ADMIN")
+				.requestMatchers(HttpMethod.POST, "/api/cities").hasRole("ADMIN")
+				.requestMatchers(HttpMethod.DELETE, "/api/cities/*").hasRole("ADMIN")
 
 				.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

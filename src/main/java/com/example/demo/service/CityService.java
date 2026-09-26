@@ -10,9 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.CityRequest;
-import com.example.demo.dto.GeocodingLocation;
+import com.example.demo.dto.CityResponse;
+import com.example.demo.dto.GeocodingApiResponse;
 import com.example.demo.entity.City;
-import com.example.demo.exception.CityAlreadyExistException;
+import com.example.demo.exception.CityAlreadyExistsException;
 import com.example.demo.exception.CityNotFoundException;
 import com.example.demo.repository.CityRepository;
 
@@ -20,14 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class CityManagementService {
+public class CityService {
 
 	private final LocationProvider locationProvider;
 	private final CityRepository cityRepository;
 	private final AuditService auditService;
 
-	public CityManagementService(LocationProvider locationProvider, AuditService auditService,
-			CityRepository cityRepository) {
+	public CityService(LocationProvider locationProvider, AuditService auditService, CityRepository cityRepository) {
 
 		this.locationProvider = locationProvider;
 		this.cityRepository = cityRepository;
@@ -35,25 +35,25 @@ public class CityManagementService {
 	}
 
 	@Transactional
-	public City addCity(CityRequest cityRequest) {
+	public City createCity(CityRequest cityRequest) {
 
 		try {
 			Optional<City> existingCity = cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(cityRequest.getCity(),
 					cityRequest.getState());
 
 			if (existingCity.isPresent()) {
-				throw new CityAlreadyExistException("City already exists!");
+				throw new CityAlreadyExistsException("City already exists!");
 			}
 
-			GeocodingLocation location = locationProvider.getLocation(cityRequest.getCity(), cityRequest.getState(),
+			GeocodingApiResponse location = locationProvider.findLocation(cityRequest.getCity(), cityRequest.getState(),
 					cityRequest.getCountryCode());
 
 			City savedCity = City.builder().city(location.getCity()).countryCode(location.getCountry())
 					.state(location.getState()).longitude(location.getLon()).latitude(location.getLat()).build();
-            
+
 			cityRepository.save(savedCity);
 
-			auditService.logAction(getCurrentUsername(), "ADD_CITY", "City added: " + savedCity.getCity() + ", "
+			auditService.recordAudit(getCurrentUsername(), "ADD_CITY", "City added: " + savedCity.getCity() + ", "
 					+ savedCity.getState() + ", " + savedCity.getCountryCode());
 
 			log.info("City added successfully: {}, {}", savedCity.getCity(), savedCity.getState());
@@ -68,8 +68,10 @@ public class CityManagementService {
 		}
 	}
 
-	public Page<City> getCities(Pageable pageable) {
-		return cityRepository.findAll(pageable);
+	public Page<CityResponse> getCities(Pageable pageable) {
+		Page<City> cities = cityRepository.findAll(pageable);
+		return cities.map(city -> new CityResponse(city.getId(), city.getCity(), city.getState(), city.getCountryCode(),
+				city.getLatitude(), city.getLongitude()));
 	}
 
 	@Transactional
@@ -81,7 +83,7 @@ public class CityManagementService {
 
 			cityRepository.delete(city);
 
-			auditService.logAction(getCurrentUsername(), "DELETE_CITY", "City deleted: " + city.getCity());
+			auditService.recordAudit(getCurrentUsername(), "DELETE_CITY", "City deleted: " + city.getCity());
 
 			log.info("City deleted successfully: {}, {}", city.getCity(), city.getState());
 

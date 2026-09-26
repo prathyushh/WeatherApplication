@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class GeocodingLocation {
+public class GeocodingApiResponse {
 	@JsonProperty("name")
 	private String city;
 	private Double lat;

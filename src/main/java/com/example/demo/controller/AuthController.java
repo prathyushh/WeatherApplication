@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,17 +26,17 @@ public class AuthController {
 	}
 
 	@PostMapping("/register")
-	public ResponseEntity<String> registerUser(@Valid @RequestBody RegisterRequest request) {
+	public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
 
-		authService.registerUser(request);
+		authService.register(request);
 
-		return ResponseEntity.ok("User registered successfully");
+		return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<AuthResponse> loginUser(@RequestBody LoginRequest request) {
+	public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
 
-		return ResponseEntity.ok(authService.loginUser(request));
+		return ResponseEntity.ok(authService.login(request));
 	}
 
 	@PostMapping("/refresh")
