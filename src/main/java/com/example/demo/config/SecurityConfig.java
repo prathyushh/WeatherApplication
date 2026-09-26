@@ -24,18 +24,18 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public PasswordEncoder passwordEncoder() {
+	PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
 	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
+	AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
 		return configuration.getAuthenticationManager();
 	}
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http,
-			CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint,
+			CustomAccessDeniedHandler accessDeniedHandler) {
 		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
 
 				.requestMatchers("/auth/register", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",

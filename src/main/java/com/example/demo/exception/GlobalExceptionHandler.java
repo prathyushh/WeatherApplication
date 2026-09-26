@@ -2,6 +2,7 @@ package com.example.demo.exception;
 
 import java.time.LocalDateTime;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,9 +67,17 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
 
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
-				"City already exists");
+				"Database constraint violation");
 
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	}
+
+	@ExceptionHandler(DataAccessException.class)
+	public ResponseEntity<ErrorResponse> handleDatabaseFailure(DataAccessException ex) {
+
+		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.SERVICE_UNAVAILABLE.value(),
+				"Database service is temporarily unavailable");
+		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
 	}
 
 	@ExceptionHandler(BadCredentialsException.class)
@@ -82,7 +91,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleException(Exception ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
-				ex.getMessage());
+				"An unexpected error occurred");
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	}
 

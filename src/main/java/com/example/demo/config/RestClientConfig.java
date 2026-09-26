@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfig {
 	@Bean
-	public RestClient openWeatherClient(@Value("${weather.api.base-url}") String baseUrl) {
+	RestClient openWeatherClient(@Value("${weather.api.base-url}") String baseUrl) {
 		HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
 		JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
