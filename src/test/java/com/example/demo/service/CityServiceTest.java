@@ -45,6 +45,9 @@ class CityServiceTest {
 	private AuditService auditService;
 
 	@Mock
+	private WeatherProviderService weatherProviderService;
+
+	@Mock
 	private Authentication authentication;
 
 	@InjectMocks
@@ -85,13 +88,9 @@ class CityServiceTest {
 		assertNotNull(result);
 
 		assertEquals("Kota", result.getCity());
-
 		assertEquals("Rajasthan", result.getState());
-
 		assertEquals("IN", result.getCountryCode());
-
 		assertEquals(25.2138, result.getLatitude());
-
 		assertEquals(75.8648, result.getLongitude());
 
 		verify(cityRepository).save(any(City.class));
@@ -123,6 +122,8 @@ class CityServiceTest {
 		verifyNoInteractions(locationProvider);
 
 		verifyNoInteractions(auditService);
+
+		verifyNoInteractions(weatherProviderService);
 	}
 
 	@Test
@@ -142,21 +143,15 @@ class CityServiceTest {
 		assertNotNull(result);
 
 		assertEquals(1, result.getTotalElements());
-
 		assertEquals(1, result.getContent().size());
 
 		CityResponse response = result.getContent().get(0);
 
 		assertEquals(1L, response.getId());
-
 		assertEquals("Kota", response.getCity());
-
 		assertEquals("Rajasthan", response.getState());
-
 		assertEquals("IN", response.getCountryCode());
-
 		assertEquals(25.2138, response.getLatitude());
-
 		assertEquals(75.8648, response.getLongitude());
 
 		verify(cityRepository).findAll(pageable);
@@ -179,6 +174,8 @@ class CityServiceTest {
 
 		verify(cityRepository).findById(cityId);
 
+		verify(weatherProviderService).deleteWeatherCache(city);
+
 		verify(cityRepository).delete(city);
 
 		verify(auditService).recordAudit("admin", "DELETE_CITY", "City deleted: Kota");
@@ -194,6 +191,8 @@ class CityServiceTest {
 		assertThrows(CityNotFoundException.class, () -> cityService.deleteCity(cityId));
 
 		verify(cityRepository).findById(cityId);
+
+		verifyNoInteractions(weatherProviderService);
 
 		verifyNoInteractions(auditService);
 	}
