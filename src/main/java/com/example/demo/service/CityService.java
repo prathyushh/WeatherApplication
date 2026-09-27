@@ -26,12 +26,14 @@ public class CityService {
 	private final LocationProvider locationProvider;
 	private final CityRepository cityRepository;
 	private final AuditService auditService;
+	private final WeatherProviderService weatherProviderService;
 
-	public CityService(LocationProvider locationProvider, AuditService auditService, CityRepository cityRepository) {
+	public CityService(WeatherProviderService weatherProviderService,LocationProvider locationProvider, AuditService auditService, CityRepository cityRepository) {
 
 		this.locationProvider = locationProvider;
 		this.cityRepository = cityRepository;
 		this.auditService = auditService;
+		this.weatherProviderService = weatherProviderService;
 	}
 
 	@Transactional
@@ -80,7 +82,7 @@ public class CityService {
 		try {
 			City city = cityRepository.findById(id)
 					.orElseThrow(() -> new CityNotFoundException("No City exists for corresponding Id"));
-
+            weatherProviderService.deleteWeatherCache(city);
 			cityRepository.delete(city);
 
 			auditService.recordAudit(getCurrentUsername(), "DELETE_CITY", "City deleted: " + city.getCity());

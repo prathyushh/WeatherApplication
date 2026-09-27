@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -46,6 +47,11 @@ public class WeatherProviderService implements WeatherProvider {
 
 			throw new WeatherApiException("Unable to retrieve weather from OpenWeather");
 		}
+	}
+
+	@CacheEvict(value = "weather", key = "#city.latitude + '_' + #city.longitude")
+	public void deleteWeatherCache(City city) {
+		log.info("Weather cache deleted for {}, {}", city.getLatitude(), city.getLongitude());
 	}
 
 }
