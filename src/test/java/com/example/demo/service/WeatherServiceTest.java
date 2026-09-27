@@ -1,23 +1,23 @@
 package com.example.demo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.example.demo.dto.WeatherResponse;
@@ -37,62 +37,85 @@ class WeatherServiceTest {
 	@Mock
 	private AuditService auditService;
 
+	@Mock
+	private Authentication authentication;
+
 	@InjectMocks
-	private WeatherService weatherInfoService;
-
-	@BeforeEach
-	void setUp() {
-
-		SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("admin", null));
-	}
+	private WeatherService weatherService;
 
 	@AfterEach
 	void tearDown() {
-
 		SecurityContextHolder.clearContext();
 	}
 
 	@Test
-	void getWeather_shouldReturnWeather_whenCityExists() {
+	void getWeather_shouldReturnWeather() {
 
-		City city = City.builder().city("Kota").state("Rajasthan").countryCode("IN").latitude(25.2138)
+		String city = "Kota";
+		String state = "Rajasthan";
+
+		City cityEntity = City.builder().id(1L).city("Kota").state("Rajasthan").countryCode("IN").latitude(25.2138)
 				.longitude(75.8648).build();
 
-		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan")).thenReturn(Optional.of(city));
+		WeatherResponse weatherResponse = new WeatherResponse();
 
-		WeatherResponse weatherResponse = new WeatherResponse("Kota", "Rajasthan", "IN", 30.5, 32.0, 60, "Clouds",
-				"scattered clouds", 4.5);
+		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(city, state)).thenReturn(Optional.of(cityEntity));
 
-		when(weatherProvider.getWeather(city)).thenReturn(weatherResponse);
+		when(weatherProvider.getWeather(cityEntity)).thenReturn(weatherResponse);
 
-		WeatherResponse result = weatherInfoService.getWeather("Kota", "Rajasthan");
+		when(authentication.getName()).thenReturn("admin");
 
-		assertEquals("Kota", result.getCity());
-		assertEquals("Rajasthan", result.getState());
-		assertEquals("IN", result.getCountryCode());
-		assertEquals(30.5, result.getTemperature());
+		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
+		WeatherResponse result = weatherService.getWeather(city, state);
 
-		verify(weatherProvider).getWeather(city);
+		assertNotNull(result);
 
-		verify(auditService).recordAudit(eq("admin"), eq("GET_WEATHER"), eq("Weather requested for: Kota, Rajasthan"));
+		assertEquals(weatherResponse, result);
+
+		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase(city, state);
+
+		verify(weatherProvider).getWeather(cityEntity);
+
+		verify(auditService).recordAudit("admin", "GET_WEATHER", "Weather requested for: Kota, Rajasthan");
 	}
 
 	@Test
-	void getWeather_shouldThrowException_whenCityDoesNotExist() {
+	void getWeather_shouldThrowException_whenCityNotFound() {
 
-		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan")).thenReturn(Optional.empty());
+		String city = "Unknown";
+		String state = "Rajasthan";
+
+		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(city, state)).thenReturn(Optional.empty());
 
 		CityNotFoundException exception = assertThrows(CityNotFoundException.class,
-				() -> weatherInfoService.getWeather("Kota", "Rajasthan"));
+				() -> weatherService.getWeather(city, state));
 
 		assertEquals("City not found!", exception.getMessage());
 
-		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
+		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase(city, state);
 
-		verify(weatherProvider, never()).getWeather(any(City.class));
+		verifyNoInteractions(weatherProvider);
+		verifyNoInteractions(auditService);
+	}
 
-		verify(auditService, never()).recordAudit(any(), any(), any());
+	@Test
+	void getWeather_shouldThrowException_whenWeatherProviderFails() {
+
+		String city = "Kota";
+		String state = "Rajasthan";
+
+		City cityEntity = City.builder().id(1L).city("Kota").state("Rajasthan").countryCode("IN").latitude(25.2138)
+				.longitude(75.8648).build();
+
+		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(city, state)).thenReturn(Optional.of(cityEntity));
+
+		when(weatherProvider.getWeather(cityEntity)).thenThrow(new RuntimeException("Weather API failed"));
+
+		assertThrows(RuntimeException.class, () -> weatherService.getWeather(city, state));
+
+		verify(weatherProvider).getWeather(cityEntity);
+
+		verifyNoInteractions(auditService);
 	}
 }

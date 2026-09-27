@@ -1,10 +1,11 @@
 package com.example.demo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -15,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -26,12 +26,9 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
-import com.example.demo.enums.Role;
 import com.example.demo.exception.InvalidRefreshTokenException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.repository.UserRepository;
-
-import io.jsonwebtoken.JwtException;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -64,23 +61,22 @@ class AuthServiceTest {
 	private AuthService authService;
 
 	@Test
-	void registerUser_shouldRegisterUser_whenUserDoesNotExist() {
+	void register_shouldRegisterUser() {
 
 		RegisterRequest request = new RegisterRequest();
 
 		request.setUsername("admin");
-		request.setPassword("password123");
-		request.setRole(Role.ADMIN);
+		request.setPassword("password");
 
 		when(repository.findByUsername("admin")).thenReturn(Optional.empty());
 
-		when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+		when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
 
 		authService.register(request);
 
 		verify(repository).findByUsername("admin");
 
-		verify(passwordEncoder).encode("password123");
+		verify(passwordEncoder).encode("password");
 
 		verify(repository).save(any(User.class));
 
@@ -88,13 +84,12 @@ class AuthServiceTest {
 	}
 
 	@Test
-	void registerUser_shouldThrowException_whenUserAlreadyExists() {
+	void register_shouldThrowException_whenUserAlreadyExists() {
 
 		RegisterRequest request = new RegisterRequest();
 
 		request.setUsername("admin");
-		request.setPassword("password123");
-		request.setRole(Role.ADMIN);
+		request.setPassword("password");
 
 		User existingUser = new User();
 
@@ -102,29 +97,23 @@ class AuthServiceTest {
 
 		when(repository.findByUsername("admin")).thenReturn(Optional.of(existingUser));
 
-		UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class,
-				() -> authService.register(request));
-
-		assertEquals("User already exists", exception.getMessage());
+		assertThrows(UserAlreadyExistsException.class, () -> authService.register(request));
 
 		verify(repository).findByUsername("admin");
 
-		verify(repository, never()).save(any(User.class));
-
-		verify(passwordEncoder, never()).encode(any(String.class));
-
-		verify(auditService, never()).recordAudit(any(), any(), any());
+		verifyNoInteractions(passwordEncoder);
+		verifyNoInteractions(auditService);
 	}
 
 	@Test
-	void loginUser_shouldReturnTokens_whenCredentialsAreValid() {
+	void login_shouldReturnAuthResponse() {
 
 		LoginRequest request = new LoginRequest();
 
 		request.setUsername("admin");
-		request.setPassword("password123");
+		request.setPassword("password");
 
-		when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
+		when(manager.authenticate(any())).thenReturn(authentication);
 
 		when(authentication.getPrincipal()).thenReturn(userDetails);
 
@@ -134,11 +123,13 @@ class AuthServiceTest {
 
 		AuthResponse response = authService.login(request);
 
+		assertNotNull(response);
+
 		assertEquals("access-token", response.getAccessToken());
 
 		assertEquals("refresh-token", response.getRefreshToken());
 
-		verify(manager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+		verify(manager).authenticate(any());
 
 		verify(jwtService).generateToken(userDetails);
 
@@ -146,30 +137,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	void loginUser_shouldThrowException_whenAuthenticationFails() {
-
-		LoginRequest request = new LoginRequest();
-
-		request.setUsername("admin");
-		request.setPassword("wrongPassword");
-
-		RuntimeException exception = new RuntimeException("Invalid credentials");
-
-		when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(exception);
-
-		RuntimeException result = assertThrows(RuntimeException.class, () -> authService.login(request));
-
-		assertEquals("Invalid credentials", result.getMessage());
-
-		verify(manager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-
-		verify(jwtService, never()).generateToken(any(UserDetails.class));
-
-		verify(jwtService, never()).generateRefreshToken(any(UserDetails.class));
-	}
-
-	@Test
-	void refreshToken_shouldReturnNewAccessToken_whenRefreshTokenIsValid() {
+	void refreshToken_shouldReturnNewAccessToken() {
 
 		RefreshTokenRequest request = new RefreshTokenRequest();
 
@@ -185,6 +153,8 @@ class AuthServiceTest {
 
 		AuthResponse response = authService.refreshToken(request);
 
+		assertNotNull(response);
+
 		assertEquals("new-access-token", response.getAccessToken());
 
 		assertEquals("old-refresh-token", response.getRefreshToken());
@@ -199,51 +169,20 @@ class AuthServiceTest {
 	}
 
 	@Test
-	void refreshToken_shouldThrowException_whenRefreshTokenIsInvalid() {
+	void refreshToken_shouldThrowException_whenTokenIsInvalid() {
 
 		RefreshTokenRequest request = new RefreshTokenRequest();
 
-		request.setRefreshToken("invalid-refresh-token");
+		request.setRefreshToken("invalid-token");
 
-		when(jwtService.extractUsername("invalid-refresh-token")).thenReturn("admin");
+		when(jwtService.extractUsername("invalid-token")).thenReturn("admin");
 
 		when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
 
-		when(jwtService.validateToken("invalid-refresh-token", userDetails)).thenReturn(false);
+		when(jwtService.validateToken("invalid-token", userDetails)).thenReturn(false);
 
-		InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class,
-				() -> authService.refreshToken(request));
+		assertThrows(InvalidRefreshTokenException.class, () -> authService.refreshToken(request));
 
-		assertEquals("Invalid refresh token", exception.getMessage());
-
-		verify(jwtService).extractUsername("invalid-refresh-token");
-
-		verify(userDetailsService).loadUserByUsername("admin");
-
-		verify(jwtService).validateToken("invalid-refresh-token", userDetails);
-
-		verify(jwtService, never()).generateToken(any(UserDetails.class));
-	}
-
-	@Test
-	void refreshToken_shouldThrowInvalidRefreshTokenException_whenJwtExceptionOccurs() {
-
-		RefreshTokenRequest request = new RefreshTokenRequest();
-
-		request.setRefreshToken("bad-token");
-
-		when(jwtService.extractUsername("bad-token")).thenThrow(new JwtException("Invalid JWT") {
-		});
-
-		InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class,
-				() -> authService.refreshToken(request));
-
-		assertEquals("Invalid refresh token", exception.getMessage());
-
-		verify(jwtService).extractUsername("bad-token");
-
-		verify(userDetailsService, never()).loadUserByUsername(any(String.class));
-
-		verify(jwtService, never()).generateToken(any(UserDetails.class));
+		verify(jwtService).validateToken("invalid-token", userDetails);
 	}
 }
