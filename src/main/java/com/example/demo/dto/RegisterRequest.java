@@ -13,5 +13,4 @@ public class RegisterRequest {
 	@Pattern(regexp = "^[A-Za-z0-9]{6,}$", message = "Password must be at least 6 characters and contain only letters and numbers")
 	private String password;
 	private Role role;
-
 }

@@ -15,13 +15,12 @@ import com.example.demo.security.CustomAccessDeniedHandler;
 import com.example.demo.security.CustomAuthenticationEntryPoint;
 import com.example.demo.security.JwtAuthenticationFilter;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-	public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-	}
 
 	@Bean
 	PasswordEncoder passwordEncoder() {
@@ -37,22 +36,15 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint,
 			CustomAccessDeniedHandler accessDeniedHandler) {
 		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
-
 				.requestMatchers("/auth/register", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",
 						"/v3/api-docs/**")
-				.permitAll()
-
-				.requestMatchers(HttpMethod.GET, "/api/cities").hasAnyRole("USER", "ADMIN")
+				.permitAll().requestMatchers(HttpMethod.GET, "/api/cities").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.GET, "/api/weather").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.POST, "/api/cities").hasRole("ADMIN")
-				.requestMatchers(HttpMethod.DELETE, "/api/cities/*").hasRole("ADMIN")
-
-				.anyRequest().authenticated())
+				.requestMatchers(HttpMethod.DELETE, "/api/cities/*").hasRole("ADMIN").anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.exceptionHandling(exception -> exception.authenticationEntryPoint(authenticationEntryPoint)
 						.accessDeniedHandler(accessDeniedHandler));
 		return http.build();
-
 	}
-
 }

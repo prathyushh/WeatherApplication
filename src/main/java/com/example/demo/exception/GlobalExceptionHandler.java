@@ -40,9 +40,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(InvalidRefreshTokenException.class)
 	public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
-
 		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
-
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
 
@@ -55,26 +53,21 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
-
 		String message = ex.getBindingResult().getFieldErrors().stream()
 				.map(error -> error.getField() + ": " + error.getDefaultMessage()).findFirst()
 				.orElse("Validation failed");
-
 		return ResponseEntity.badRequest().body(message);
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
 				"Database constraint violation");
-
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	}
 
 	@ExceptionHandler(DataAccessException.class)
 	public ResponseEntity<ErrorResponse> handleDatabaseFailure(DataAccessException ex) {
-
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.SERVICE_UNAVAILABLE.value(),
 				"Database service is temporarily unavailable");
 		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
@@ -82,9 +75,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
-
 		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 401, "Invalid username or password");
-
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
 
@@ -94,5 +85,4 @@ public class GlobalExceptionHandler {
 				"An unexpected error occurred");
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	}
-
 }

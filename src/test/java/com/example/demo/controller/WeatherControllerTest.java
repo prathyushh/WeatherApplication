@@ -18,31 +18,21 @@ import com.example.demo.service.WeatherService;
 
 @ExtendWith(MockitoExtension.class)
 class WeatherControllerTest {
-
 	@Mock
 	private WeatherService weatherInfoService;
-
 	@InjectMocks
 	private WeatherController weatherController;
 
 	@Test
 	void getWeather_shouldReturnWeather() {
-
 		String city = "Kota";
 		String state = "Rajasthan";
-
 		WeatherResponse weatherResponse = new WeatherResponse();
-
 		when(weatherInfoService.getWeather(city, state)).thenReturn(weatherResponse);
-
 		ResponseEntity<WeatherResponse> response = weatherController.getWeather(city, state);
-
 		assertNotNull(response);
-
 		assertEquals(HttpStatus.OK, response.getStatusCode());
-
 		assertEquals(weatherResponse, response.getBody());
-
 		verify(weatherInfoService).getWeather(city, state);
 	}
 }

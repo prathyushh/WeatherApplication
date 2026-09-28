@@ -21,69 +21,36 @@ import com.example.demo.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
+	@Mock
+	private AuditRepository auditRepository;
+	@Mock
+	private UserRepository userRepository;
+	@InjectMocks
+	private AuditService auditService;
 
-    @Mock
-    private AuditRepository auditRepository;
+	@Test
+	void recordAudit_shouldSaveAudit() {
+		String username = "admin";
+		String action = "ADD_CITY";
+		String details = "Added Kota";
+		User user = new User();
+		user.setId(1L);
+		user.setUsername(username);
+		when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+		auditService.recordAudit(username, action, details);
+		verify(userRepository).findByUsername(username);
+		verify(auditRepository).save(any(Audit.class));
+	}
 
-    @Mock
-    private UserRepository userRepository;
-
-    @InjectMocks
-    private AuditService auditService;
-
-    @Test
-    void recordAudit_shouldSaveAudit() {
-
-        String username = "admin";
-        String action = "ADD_CITY";
-        String details = "Added Kota";
-
-        User user = new User();
-        user.setId(1L);
-        user.setUsername(username);
-
-        when(userRepository.findByUsername(username))
-                .thenReturn(Optional.of(user));
-
-        auditService.recordAudit(
-                username,
-                action,
-                details
-        );
-
-        verify(userRepository)
-                .findByUsername(username);
-
-        verify(auditRepository)
-                .save(any(Audit.class));
-    }
-
-    @Test
-    void recordAudit_shouldThrowException_whenUserNotFound() {
-
-        String username = "unknown";
-        String action = "ADD_CITY";
-        String details = "Added Kota";
-
-        when(userRepository.findByUsername(username))
-                .thenReturn(Optional.empty());
-
-        RuntimeException exception =
-                assertThrows(
-                        RuntimeException.class,
-                        () -> auditService.recordAudit(
-                                username,
-                                action,
-                                details
-                        )
-                );
-
-        assertEquals(
-                "User not found",
-                exception.getMessage()
-        );
-
-        verify(userRepository)
-                .findByUsername(username);
-    }
+	@Test
+	void recordAudit_shouldThrowException_whenUserNotFound() {
+		String username = "unknown";
+		String action = "ADD_CITY";
+		String details = "Added Kota";
+		when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+		RuntimeException exception = assertThrows(RuntimeException.class,
+				() -> auditService.recordAudit(username, action, details));
+		assertEquals("User not found", exception.getMessage());
+		verify(userRepository).findByUsername(username);
+	}
 }

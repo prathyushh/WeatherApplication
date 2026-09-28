@@ -14,9 +14,7 @@ public class RestClientConfig {
 	@Bean
 	RestClient openWeatherClient(@Value("${weather.api.base-url}") String baseUrl) {
 		HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-
 		JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
-
 		requestFactory.setReadTimeout(Duration.ofSeconds(10));
 		return RestClient.builder().baseUrl(baseUrl).requestFactory(requestFactory).build();
 	}

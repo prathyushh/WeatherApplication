@@ -14,20 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.CityRequest;
 import com.example.demo.dto.CityResponse;
+import com.example.demo.dto.StringResponse;
 import com.example.demo.entity.City;
 import com.example.demo.service.CityService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/cities")
 public class CityController {
 	private final CityService cityService;
-
-	public CityController(CityService cityService) {
-		this.cityService = cityService;
-
-	}
 
 	@PostMapping
 	public ResponseEntity<City> addCity(@Valid @RequestBody CityRequest cityRequest) {
@@ -37,13 +35,11 @@ public class CityController {
 	@GetMapping
 	public ResponseEntity<Page<CityResponse>> getCities(Pageable pageable) {
 		return ResponseEntity.ok(cityService.getCities(pageable));
-
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<String> deleteCity(@PathVariable Long id) {
-		cityService.deleteCity(id);
-		return ResponseEntity.ok("City deleted");
+	public ResponseEntity<StringResponse> deleteCity(@PathVariable Long id) {
+		StringResponse response = cityService.deleteCity(id);
+		return ResponseEntity.ok(response);
 	}
-
 }

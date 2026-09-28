@@ -6,5 +6,4 @@ public class LocationApiException extends RuntimeException {
 	public LocationApiException(String msg) {
 		super(msg);
 	}
-
 }

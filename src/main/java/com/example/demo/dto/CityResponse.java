@@ -14,5 +14,4 @@ public class CityResponse {
 	private String countryCode;
 	private double latitude;
 	private double longitude;
-
 }

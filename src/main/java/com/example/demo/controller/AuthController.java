@@ -11,37 +11,31 @@ import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.dto.StringResponse;
 import com.example.demo.service.AuthService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
-
 	private final AuthService authService;
 
-	public AuthController(AuthService authService) {
-		this.authService = authService;
-	}
-
 	@PostMapping("/register")
-	public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
-
-		authService.register(request);
-
-		return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+	public ResponseEntity<StringResponse> register(@Valid @RequestBody RegisterRequest request) {
+		StringResponse registerResponse = authService.register(request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(registerResponse);
 	}
 
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-
 		return ResponseEntity.ok(authService.login(request));
 	}
 
 	@PostMapping("/refresh")
 	public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
-
 		return ResponseEntity.ok(authService.refreshToken(request));
 	}
 }

@@ -12,5 +12,4 @@ public class GeocodingApiResponse {
 	private Double lon;
 	private String state;
 	private String country;
-
 }

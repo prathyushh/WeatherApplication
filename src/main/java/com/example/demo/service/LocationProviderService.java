@@ -6,53 +6,39 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import com.example.demo.config.OpenWeatherApiUriBuilder;
 import com.example.demo.dto.GeocodingApiResponse;
 import com.example.demo.exception.LocationApiException;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class LocationProviderService implements LocationProvider {
-
 	private final RestClient restClient;
-
-	public LocationProviderService(RestClient restClient) {
-		this.restClient = restClient;
-	}
-
 	@Value("${weather.api.key}")
 	private String apiKey;
 
 	@Override
 	public GeocodingApiResponse findLocation(String city, String state, String country) {
-
 		try {
 			GeocodingApiResponse[] locations = restClient.get()
-					.uri(uriBuilder -> uriBuilder.path("geo/1.0/direct").queryParam("q", city + "," + country)
-							.queryParam("limit", 5).queryParam("appId", apiKey).build())
+					.uri(uriBuilder -> OpenWeatherApiUriBuilder.geocoding(uriBuilder, city, country, apiKey).build())
 					.retrieve().body(GeocodingApiResponse[].class);
-
 			GeocodingApiResponse location = Arrays.stream(locations)
 					.filter(loc -> loc.getCity().equalsIgnoreCase(city) && loc.getCountry().equalsIgnoreCase(country)
 							&& loc.getState().equalsIgnoreCase(state))
 					.findFirst()
 					.orElseThrow(() -> new LocationApiException("City and state combination doesn't match"));
-
 			log.info("Location retrieved successfully: {}, {}, {}", city, state, country);
-
 			return location;
-
 		} catch (LocationApiException ex) {
-
 			log.error("Location retrieval failed for {}, {}, {}: {}", city, state, country, ex.getMessage());
-
 			throw ex;
-
 		} catch (Exception ex) {
-
 			log.error("OpenWeather location API failed for {}, {}, {}: {}", city, state, country, ex.getMessage());
-
 			throw new LocationApiException("Unable to retrieve location from OpenWeather");
 		}
 	}

@@ -8,13 +8,12 @@ import org.springframework.stereotype.Service;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 	private final UserRepository repository;
-
-	public CustomUserDetailsService(UserRepository repository) {
-		this.repository = repository;
-	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -22,5 +21,4 @@ public class CustomUserDetailsService implements UserDetailsService {
 		return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
 				.password(user.getPassword()).roles(user.getRole().name()).build();
 	}
-
 }
