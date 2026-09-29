@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,12 +107,14 @@ class AuthServiceTest {
 		request.setPassword("password");
 		when(manager.authenticate(any())).thenReturn(authentication);
 		when(authentication.getPrincipal()).thenReturn(userDetails);
+		doReturn(List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))).when(userDetails).getAuthorities();
 		when(jwtService.generateToken(userDetails)).thenReturn("access-token");
 		when(jwtService.generateRefreshToken(userDetails)).thenReturn("refresh-token");
 		AuthResponse response = authService.login(request);
 		assertNotNull(response);
 		assertEquals("access-token", response.getAccessToken());
 		assertEquals("refresh-token", response.getRefreshToken());
+		assertEquals("ADMIN", response.getRole());
 		verify(manager).authenticate(any());
 		verify(jwtService).generateToken(userDetails);
 		verify(jwtService).generateRefreshToken(userDetails);

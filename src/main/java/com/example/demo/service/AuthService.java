@@ -68,8 +68,9 @@ public class AuthService {
 			UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 			String token = jwtService.generateToken(userDetails);
 			String refreshToken = jwtService.generateRefreshToken(userDetails);
+			String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 			log.info("User authenticated successfully: {}", request.getUsername());
-			return new AuthResponse(token, refreshToken);
+			return new AuthResponse(token, refreshToken, role);
 		} catch (Exception ex) {
 			log.error("User authentication failed: {} : {}", request.getUsername(), ex.getMessage());
 			throw ex;
@@ -86,7 +87,7 @@ public class AuthService {
 			}
 			String newAccessToken = jwtService.generateToken(userDetails);
 			log.info("Access token refreshed successfully: {}", username);
-			return new AuthResponse(newAccessToken, refreshToken);
+			return new AuthResponse(newAccessToken, refreshToken,null);
 		} catch (JwtException ex) {
 			log.error("Token refresh failed: {}", ex.getMessage());
 			throw new InvalidRefreshTokenException(ExceptionMessages.INVALID_REFRESH_TOKEN);
