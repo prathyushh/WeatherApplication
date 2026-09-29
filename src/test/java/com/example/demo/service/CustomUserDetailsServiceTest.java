@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.example.demo.constant.ExceptionMessages;
 import com.example.demo.entity.User;
 import com.example.demo.enums.Role;
 import com.example.demo.repository.UserRepository;
@@ -48,7 +49,7 @@ class CustomUserDetailsServiceTest {
 		when(repository.findByUsername("unknown")).thenReturn(Optional.empty());
 		RuntimeException exception = assertThrows(RuntimeException.class,
 				() -> userDetailsService.loadUserByUsername("unknown"));
-		assertEquals("user not found", exception.getMessage());
+		assertEquals(ExceptionMessages.USER_NOT_FOUND, exception.getMessage());
 		verify(repository).findByUsername("unknown");
 	}
 }

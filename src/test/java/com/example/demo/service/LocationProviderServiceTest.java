@@ -1,4 +1,3 @@
-
 package com.example.demo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,6 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+import java.util.function.Function;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriBuilder;
 
 import com.example.demo.dto.GeocodingApiResponse;
 import com.example.demo.exception.LocationApiException;
@@ -48,7 +52,11 @@ class LocationProviderServiceTest {
 		location.setLon(75.8648);
 		GeocodingApiResponse[] locations = { location };
 		when(restClient.get()).thenReturn(request);
-		when(request.uri(any(java.util.function.Function.class))).thenReturn(requestHeaders);
+		when(request.uri(any(Function.class))).thenAnswer(invocation -> {
+			Function<UriBuilder, URI> uriFunction = invocation.getArgument(0);
+			uriFunction.apply(new DefaultUriBuilderFactory().builder());
+			return requestHeaders;
+		});
 		when(requestHeaders.retrieve()).thenReturn(responseSpec);
 		when(responseSpec.body(GeocodingApiResponse[].class)).thenReturn(locations);
 		GeocodingApiResponse result = locationProviderService.findLocation("Kota", "Rajasthan", "IN");
@@ -59,16 +67,59 @@ class LocationProviderServiceTest {
 		assertEquals(25.2138, result.getLat());
 		assertEquals(75.8648, result.getLon());
 		verify(restClient).get();
+		verify(request).uri(any(Function.class));
 	}
 
 	@Test
-	void findLocation_shouldThrowException_whenLocationNotFound() {
+	void findLocation_shouldThrowException_whenCityDoesNotMatch() {
 		GeocodingApiResponse location = new GeocodingApiResponse();
-		location.setCity("Kota");
-		location.setState("Karnataka");
+		location.setCity("Jaipur");
+		location.setState("Rajasthan");
 		location.setCountry("IN");
 		when(restClient.get()).thenReturn(request);
-		when(request.uri(any(java.util.function.Function.class))).thenReturn(requestHeaders);
+		when(request.uri(any(Function.class))).thenAnswer(invocation -> {
+			Function<UriBuilder, URI> uriFunction = invocation.getArgument(0);
+			uriFunction.apply(new DefaultUriBuilderFactory().builder());
+			return requestHeaders;
+		});
+		when(requestHeaders.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.body(GeocodingApiResponse[].class)).thenReturn(new GeocodingApiResponse[] { location });
+		LocationApiException exception = assertThrows(LocationApiException.class,
+				() -> locationProviderService.findLocation("Kota", "Rajasthan", "IN"));
+		assertEquals("City and state combination doesn't match", exception.getMessage());
+	}
+
+	@Test
+	void findLocation_shouldThrowException_whenCountryDoesNotMatch() {
+		GeocodingApiResponse location = new GeocodingApiResponse();
+		location.setCity("Kota");
+		location.setState("Rajasthan");
+		location.setCountry("US");
+		when(restClient.get()).thenReturn(request);
+		when(request.uri(any(Function.class))).thenAnswer(invocation -> {
+			Function<UriBuilder, URI> uriFunction = invocation.getArgument(0);
+			uriFunction.apply(new DefaultUriBuilderFactory().builder());
+			return requestHeaders;
+		});
+		when(requestHeaders.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.body(GeocodingApiResponse[].class)).thenReturn(new GeocodingApiResponse[] { location });
+		LocationApiException exception = assertThrows(LocationApiException.class,
+				() -> locationProviderService.findLocation("Kota", "Rajasthan", "IN"));
+		assertEquals("City and state combination doesn't match", exception.getMessage());
+	}
+
+	@Test
+	void findLocation_shouldThrowException_whenStateDoesNotMatch() {
+		GeocodingApiResponse location = new GeocodingApiResponse();
+		location.setCity("Kota");
+		location.setCountry("IN");
+		location.setState("Karnataka");
+		when(restClient.get()).thenReturn(request);
+		when(request.uri(any(Function.class))).thenAnswer(invocation -> {
+			Function<UriBuilder, URI> uriFunction = invocation.getArgument(0);
+			uriFunction.apply(new DefaultUriBuilderFactory().builder());
+			return requestHeaders;
+		});
 		when(requestHeaders.retrieve()).thenReturn(responseSpec);
 		when(responseSpec.body(GeocodingApiResponse[].class)).thenReturn(new GeocodingApiResponse[] { location });
 		LocationApiException exception = assertThrows(LocationApiException.class,

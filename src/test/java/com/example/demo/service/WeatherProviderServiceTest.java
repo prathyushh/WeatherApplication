@@ -1,4 +1,3 @@
-
 package com.example.demo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,7 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.List;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriBuilder;
 
 import com.example.demo.dto.Main;
 import com.example.demo.dto.Weather;
@@ -65,7 +68,11 @@ class WeatherProviderServiceTest {
 		apiResponse.setWeather(List.of(weather));
 		apiResponse.setWind(wind);
 		when(restClient.get()).thenReturn(request);
-		when(request.uri(any(java.util.function.Function.class))).thenReturn(requestHeaders);
+		when(request.uri(any(Function.class))).thenAnswer(invocation -> {
+			Function<UriBuilder, URI> uriFunction = invocation.getArgument(0);
+			uriFunction.apply(new DefaultUriBuilderFactory().builder());
+			return requestHeaders;
+		});
 		when(requestHeaders.retrieve()).thenReturn(responseSpec);
 		when(responseSpec.body(WeatherApiResponse.class)).thenReturn(apiResponse);
 		WeatherResponse result = weatherProviderService.getWeather(city);
@@ -80,6 +87,9 @@ class WeatherProviderServiceTest {
 		assertEquals("broken clouds", result.getDescription());
 		assertEquals(4.5, result.getWindSpeed());
 		verify(restClient).get();
+		verify(request).uri(any(Function.class));
+		verify(requestHeaders).retrieve();
+		verify(responseSpec).body(WeatherApiResponse.class);
 	}
 
 	@Test
@@ -89,7 +99,14 @@ class WeatherProviderServiceTest {
 		when(restClient.get()).thenThrow(new RuntimeException("API failed"));
 		WeatherApiException exception = assertThrows(WeatherApiException.class,
 				() -> weatherProviderService.getWeather(city));
-
 		assertEquals("Unable to retrieve weather from OpenWeather", exception.getMessage());
+		verify(restClient).get();
+	}
+
+	@Test
+	void deleteWeatherCache_shouldDeleteWeatherCache() {
+		City city = City.builder().city("Kota").state("Rajasthan").countryCode("IN").latitude(25.2138)
+				.longitude(75.8648).build();
+		weatherProviderService.deleteWeatherCache(city);
 	}
 }

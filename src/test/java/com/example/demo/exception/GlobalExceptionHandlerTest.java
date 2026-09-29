@@ -1,4 +1,3 @@
-
 package com.example.demo.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,6 +9,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+
+import com.example.demo.constant.ExceptionMessages;
 
 class GlobalExceptionHandlerTest {
 	private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
@@ -88,7 +89,7 @@ class GlobalExceptionHandlerTest {
 		assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
 		assertNotNull(response.getBody());
 		assertEquals(409, response.getBody().getStatus());
-		assertEquals("Database constraint violation", response.getBody().getMessage());
+		assertEquals(ExceptionMessages.DATABASE_VIOLATION, response.getBody().getMessage());
 		assertNotNull(response.getBody().getTimestamp());
 	}
 
@@ -100,8 +101,8 @@ class GlobalExceptionHandlerTest {
 		ResponseEntity<ErrorResponse> response = handler.handleDatabaseFailure(exception);
 		assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
 		assertNotNull(response.getBody());
-		assertEquals(503, response.getBody().getStatus());
-		assertEquals("Database service is temporarily unavailable", response.getBody().getMessage());
+		assertEquals(HttpStatus.SERVICE_UNAVAILABLE.value(), response.getBody().getStatus());
+		assertEquals(ExceptionMessages.DATABASE_UNAVAILABLE, response.getBody().getMessage());
 		assertNotNull(response.getBody().getTimestamp());
 	}
 
@@ -112,7 +113,18 @@ class GlobalExceptionHandlerTest {
 		assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
 		assertNotNull(response.getBody());
 		assertEquals(401, response.getBody().getStatus());
-		assertEquals("Invalid username or password", response.getBody().getMessage());
+		assertEquals(ExceptionMessages.USERNAMEPASSWORD_INVALID, response.getBody().getMessage());
+		assertNotNull(response.getBody().getTimestamp());
+	}
+
+	@Test
+	void handleException_shouldReturn500() {
+		Exception exception = new Exception("Unexpected error");
+		ResponseEntity<ErrorResponse> response = handler.handleException(exception);
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+		assertNotNull(response.getBody());
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getBody().getStatus());
+		assertEquals(ExceptionMessages.INTERNAL_SERVER_ERROR, response.getBody().getMessage());
 		assertNotNull(response.getBody().getTimestamp());
 	}
 }

@@ -25,10 +25,13 @@ import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.dto.StringResponse;
 import com.example.demo.entity.User;
 import com.example.demo.exception.InvalidRefreshTokenException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.repository.UserRepository;
+
+import io.jsonwebtoken.JwtException;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -58,7 +61,8 @@ class AuthServiceTest {
 		request.setPassword("password");
 		when(repository.findByUsername("admin")).thenReturn(Optional.empty());
 		when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-		authService.register(request);
+		StringResponse response = authService.register(request);
+		assertNotNull(response);
 		verify(repository).findByUsername("admin");
 		verify(passwordEncoder).encode("password");
 		verify(repository).save(any(User.class));
@@ -80,6 +84,20 @@ class AuthServiceTest {
 	}
 
 	@Test
+	void register_shouldRethrowException_whenRegistrationFails() {
+		RegisterRequest request = new RegisterRequest();
+		request.setUsername("admin");
+		request.setPassword("password");
+		when(repository.findByUsername("admin")).thenReturn(Optional.empty());
+		when(passwordEncoder.encode("password")).thenThrow(new RuntimeException("Encoding failed"));
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.register(request));
+		assertEquals("Encoding failed", exception.getMessage());
+		verify(repository).findByUsername("admin");
+		verify(passwordEncoder).encode("password");
+		verifyNoInteractions(auditService);
+	}
+
+	@Test
 	void login_shouldReturnAuthResponse() {
 		LoginRequest request = new LoginRequest();
 		request.setUsername("admin");
@@ -95,6 +113,18 @@ class AuthServiceTest {
 		verify(manager).authenticate(any());
 		verify(jwtService).generateToken(userDetails);
 		verify(jwtService).generateRefreshToken(userDetails);
+	}
+
+	@Test
+	void login_shouldRethrowException_whenAuthenticationFails() {
+		LoginRequest request = new LoginRequest();
+		request.setUsername("admin");
+		request.setPassword("wrong-password");
+		when(manager.authenticate(any())).thenThrow(new RuntimeException("Authentication failed"));
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.login(request));
+		assertEquals("Authentication failed", exception.getMessage());
+		verify(manager).authenticate(any());
+		verifyNoInteractions(jwtService);
 	}
 
 	@Test
@@ -124,5 +154,17 @@ class AuthServiceTest {
 		when(jwtService.validateToken("invalid-token", userDetails)).thenReturn(false);
 		assertThrows(InvalidRefreshTokenException.class, () -> authService.refreshToken(request));
 		verify(jwtService).validateToken("invalid-token", userDetails);
+	}
+
+	@Test
+	void refreshToken_shouldThrowInvalidRefreshTokenException_whenJwtExceptionOccurs() {
+		RefreshTokenRequest request = new RefreshTokenRequest();
+		request.setRefreshToken("expired-token");
+		when(jwtService.extractUsername("expired-token")).thenThrow(new JwtException("Token expired"));
+		InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class,
+				() -> authService.refreshToken(request));
+		assertNotNull(exception);
+		verify(jwtService).extractUsername("expired-token");
+		verifyNoInteractions(userDetailsService);
 	}
 }

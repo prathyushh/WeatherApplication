@@ -1,9 +1,9 @@
+
 package com.example.demo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -27,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.example.demo.dto.CityRequest;
 import com.example.demo.dto.CityResponse;
 import com.example.demo.dto.GeocodingApiResponse;
+import com.example.demo.dto.StringResponse;
 import com.example.demo.entity.City;
 import com.example.demo.exception.CityAlreadyExistsException;
 import com.example.demo.exception.CityNotFoundException;
@@ -42,6 +43,8 @@ class CityServiceTest {
 	private AuditService auditService;
 	@Mock
 	private WeatherProviderService weatherProviderService;
+	@Mock
+	private CityTransactionService cityTransactionService;
 	@Mock
 	private Authentication authentication;
 	@InjectMocks
@@ -64,19 +67,22 @@ class CityServiceTest {
 		location.setCountry("IN");
 		location.setLat(25.2138);
 		location.setLon(75.8648);
+		City savedCity = City.builder().id(1L).city("Kota").state("Rajasthan").countryCode("IN").latitude(25.2138)
+				.longitude(75.8648).build();
 		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan")).thenReturn(Optional.empty());
 		when(locationProvider.findLocation("Kota", "Rajasthan", "IN")).thenReturn(location);
-		when(authentication.getName()).thenReturn("admin");
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		when(cityTransactionService.saveCityWithAudit(location)).thenReturn(savedCity);
 		City result = cityService.createCity(request);
 		assertNotNull(result);
+		assertEquals(1L, result.getId());
 		assertEquals("Kota", result.getCity());
 		assertEquals("Rajasthan", result.getState());
 		assertEquals("IN", result.getCountryCode());
 		assertEquals(25.2138, result.getLatitude());
 		assertEquals(75.8648, result.getLongitude());
-		verify(cityRepository).save(any(City.class));
-		verify(auditService).recordAudit("admin", "ADD_CITY", "City added: Kota, Rajasthan, IN");
+		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
+		verify(locationProvider).findLocation("Kota", "Rajasthan", "IN");
+		verify(cityTransactionService).saveCityWithAudit(location);
 	}
 
 	@Test
@@ -93,8 +99,7 @@ class CityServiceTest {
 		assertThrows(CityAlreadyExistsException.class, () -> cityService.createCity(request));
 		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
 		verifyNoInteractions(locationProvider);
-		verifyNoInteractions(auditService);
-		verifyNoInteractions(weatherProviderService);
+		verifyNoInteractions(cityTransactionService);
 	}
 
 	@Test
@@ -125,7 +130,8 @@ class CityServiceTest {
 		when(cityRepository.findById(cityId)).thenReturn(Optional.of(city));
 		when(authentication.getName()).thenReturn("admin");
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		cityService.deleteCity(cityId);
+		StringResponse result = cityService.deleteCity(cityId);
+		assertNotNull(result);
 		verify(cityRepository).findById(cityId);
 		verify(weatherProviderService).deleteWeatherCache(city);
 		verify(cityRepository).delete(city);

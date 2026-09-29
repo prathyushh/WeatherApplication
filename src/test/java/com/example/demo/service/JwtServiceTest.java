@@ -5,11 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import io.jsonwebtoken.Jwts;
 
 @ExtendWith(MockitoExtension.class)
 class JwtServiceTest {
@@ -49,6 +56,17 @@ class JwtServiceTest {
 	}
 
 	@Test
+	void validateToken_shouldReturnFalse_whenTokenIsExpired() throws Exception {
+		UserDetails userDetails = User.withUsername("admin").password("password").roles("ADMIN").build();
+		SecretKey secretKey = getSecretKey();
+		String expiredToken = Jwts.builder().subject(userDetails.getUsername())
+				.issuedAt(new Date(System.currentTimeMillis() - 10_000))
+				.expiration(new Date(System.currentTimeMillis() - 1_000)).signWith(secretKey).compact();
+		boolean result = jwtService.validateToken(expiredToken, userDetails);
+		assertFalse(result);
+	}
+
+	@Test
 	void generateRefreshToken_shouldGenerateToken() {
 		UserDetails userDetails = User.withUsername("admin").password("password").roles("ADMIN").build();
 		String refreshToken = jwtService.generateRefreshToken(userDetails);
@@ -62,5 +80,11 @@ class JwtServiceTest {
 		String refreshToken = jwtService.generateRefreshToken(userDetails);
 		String username = jwtService.extractUsername(refreshToken);
 		assertEquals("admin", username);
+	}
+
+	private SecretKey getSecretKey() throws Exception {
+		Field field = JwtService.class.getDeclaredField("secretKey");
+		field.setAccessible(true);
+		return (SecretKey) field.get(jwtService);
 	}
 }
