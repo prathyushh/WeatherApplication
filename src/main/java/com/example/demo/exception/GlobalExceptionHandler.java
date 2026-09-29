@@ -11,6 +11,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.example.demo.constant.ExceptionMessages;
+import com.example.demo.constant.ValidationMessages;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(CityNotFoundException.class)
@@ -55,34 +58,34 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
 		String message = ex.getBindingResult().getFieldErrors().stream()
 				.map(error -> error.getField() + ": " + error.getDefaultMessage()).findFirst()
-				.orElse("Validation failed");
+				.orElse(ValidationMessages.VALIDATION_FAILED);
 		return ResponseEntity.badRequest().body(message);
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(),
-				"Database constraint violation");
+				ExceptionMessages.DATABASE_VIOLATION);
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	}
 
 	@ExceptionHandler(DataAccessException.class)
 	public ResponseEntity<ErrorResponse> handleDatabaseFailure(DataAccessException ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.SERVICE_UNAVAILABLE.value(),
-				"Database service is temporarily unavailable");
+				ExceptionMessages.DATABASE_UNAVAILABLE);
 		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
 	}
 
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
-		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 401, "Invalid username or password");
+		ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 401, ExceptionMessages.USERNAMEPASSWORD_INVALID);
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleException(Exception ex) {
 		ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
-				"An unexpected error occurred");
+				ExceptionMessages.INTERNAL_SERVER_ERROR);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	}
 }

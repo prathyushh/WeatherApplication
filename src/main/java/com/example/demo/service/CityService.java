@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.constant.ExceptionMessages;
+import com.example.demo.constant.ResponseMessages;
 import com.example.demo.dto.CityRequest;
 import com.example.demo.dto.CityResponse;
 import com.example.demo.dto.GeocodingApiResponse;
@@ -36,7 +38,7 @@ public class CityService {
 			Optional<City> existingCity = cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(cityRequest.getCity(),
 					cityRequest.getState());
 			if (existingCity.isPresent()) {
-				throw new CityAlreadyExistsException("City already exists!");
+				throw new CityAlreadyExistsException(ExceptionMessages.CITY_ALREADY_EXISTS);
 			}
 			GeocodingApiResponse location = locationProvider.findLocation(cityRequest.getCity(), cityRequest.getState(),
 					cityRequest.getCountryCode());
@@ -64,7 +66,7 @@ public class CityService {
 			cityRepository.delete(city);
 			auditService.recordAudit(getCurrentUsername(), "DELETE_CITY", "City deleted: " + city.getCity());
 			log.info("City deleted successfully: {}, {}", city.getCity(), city.getState());
-			return new StringResponse("City deleted successfully");
+			return new StringResponse(ResponseMessages.CITY_DELETED_SUCCESSFULLY);
 		} catch (Exception ex) {
 			log.error("Failed to delete city with id: {} :{}", id, ex.getMessage());
 			throw ex;

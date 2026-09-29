@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.constant.ExceptionMessages;
+import com.example.demo.constant.ResponseMessages;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RefreshTokenRequest;
@@ -41,7 +43,7 @@ public class AuthService {
 		Optional<User> existingUser = repository.findByUsername(request.getUsername());
 		if (existingUser.isPresent()) {
 			log.error("User already exists: {}", request.getUsername());
-			throw new UserAlreadyExistsException("User already exists");
+			throw new UserAlreadyExistsException(ExceptionMessages.USER_ALREADY_EXISTS);
 		}
 		try {
 			String encodedPassword = passwordEncoder.encode(request.getPassword());
@@ -52,7 +54,7 @@ public class AuthService {
 			repository.save(user);
 			log.info("User registered successfully: {}", user.getUsername());
 			auditService.recordAudit(user.getUsername(), "REGISTER", "User registered successfully");
-			return new StringResponse("User registered successfully");
+			return new StringResponse(ResponseMessages.USER_REGISTERED_SUCCESSFULLY);
 		} catch (Exception ex) {
 			log.error("User registration failed: {} : {}", request.getUsername(), ex.getMessage());
 			throw ex;
@@ -80,14 +82,14 @@ public class AuthService {
 			String username = jwtService.extractUsername(refreshToken);
 			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 			if (!jwtService.validateToken(refreshToken, userDetails)) {
-				throw new InvalidRefreshTokenException("Invalid refresh token");
+				throw new InvalidRefreshTokenException(ExceptionMessages.INVALID_REFRESH_TOKEN);
 			}
 			String newAccessToken = jwtService.generateToken(userDetails);
 			log.info("Access token refreshed successfully: {}", username);
 			return new AuthResponse(newAccessToken, refreshToken);
 		} catch (JwtException ex) {
 			log.error("Token refresh failed: {}", ex.getMessage());
-			throw new InvalidRefreshTokenException("Invalid refresh token");
+			throw new InvalidRefreshTokenException(ExceptionMessages.INVALID_REFRESH_TOKEN);
 		}
 	}
 }

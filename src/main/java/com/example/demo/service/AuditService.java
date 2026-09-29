@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.example.demo.constant.ExceptionMessages;
 import com.example.demo.entity.Audit;
 import com.example.demo.entity.User;
 import com.example.demo.repository.AuditRepository;
@@ -22,7 +23,7 @@ public class AuditService {
 	public void recordAudit(String username, String action, String details) {
 		try {
 			User user = userRepository.findByUsername(username)
-					.orElseThrow(() -> new RuntimeException("User not found"));
+					.orElseThrow(() -> new RuntimeException(ExceptionMessages.USER_NOT_FOUND));
 			Audit audit = new Audit();
 			audit.setUserId(user.getId());
 			audit.setAction(action);

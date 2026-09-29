@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.constant.ExceptionMessages;
 import com.example.demo.dto.WeatherResponse;
 import com.example.demo.entity.City;
 import com.example.demo.exception.CityNotFoundException;
@@ -23,7 +24,7 @@ public class WeatherService {
 	public WeatherResponse getWeather(String city, String state) {
 		try {
 			City cityEntity = cityRepository.findByCityIgnoreCaseAndStateIgnoreCase(city, state)
-					.orElseThrow(() -> new CityNotFoundException("City not found!"));
+					.orElseThrow(() -> new CityNotFoundException(ExceptionMessages.CITY_NOT_FOUND));
 			WeatherResponse response = weatherProvider.getWeather(cityEntity);
 			auditService.recordAudit(getCurrentUsername(), "GET_WEATHER",
 					"Weather requested for: " + city + ", " + state);

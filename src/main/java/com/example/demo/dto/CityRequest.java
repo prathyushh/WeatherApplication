@@ -1,18 +1,20 @@
 package com.example.demo.dto;
 
+import com.example.demo.constant.ValidationMessages;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
 public class CityRequest {
-	@NotBlank(message = "City is required")
-	@Pattern(regexp = "^[a-zA-Z\\s.-]+$", message = "City must contain only letters, spaces, dots or hyphens")
+	@NotBlank(message = ValidationMessages.CITY_REQUIRED)
+	@Pattern(regexp = "^[a-zA-Z\\s.-]+$", message = ValidationMessages.CITY_INVALID)
 	private String city;
-	@NotBlank(message = "State is required")
-	@Pattern(regexp = "^[a-zA-Z\\s.-]+$", message = "State must contain only letters, spaces, dots or hyphens")
+	@NotBlank(message = ValidationMessages.STATE_REQUIRED)
+	@Pattern(regexp = "^[a-zA-Z\\s.-]+$", message = ValidationMessages.STATE_INVALID)
 	private String state;
-	@NotBlank(message = "Country code is required")
-	@Pattern(regexp = "^[A-Za-z]{2}$", message = "Country code must be a 2-letter country code")
+	@NotBlank(message = ValidationMessages.COUNTRY_CODE_REQUIRED)
+	@Pattern(regexp = "^[A-Za-z]{2}$", message = ValidationMessages.COUNTRY_CODE_INVALID)
 	private String countryCode;
 }

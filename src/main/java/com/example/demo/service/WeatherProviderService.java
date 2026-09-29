@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import com.example.demo.config.OpenWeatherApiUriBuilder;
+import com.example.demo.constant.ExceptionMessages;
 import com.example.demo.dto.WeatherApiResponse;
 import com.example.demo.dto.WeatherResponse;
 import com.example.demo.entity.City;
@@ -38,7 +39,7 @@ public class WeatherProviderService implements WeatherProvider {
 					response.getWind().getSpeed());
 		} catch (Exception ex) {
 			log.error("OpenWeather API failed for {}, {}", city.getLatitude(), city.getLongitude(), ex.getMessage());
-			throw new WeatherApiException("Unable to retrieve weather from OpenWeather");
+			throw new WeatherApiException(ExceptionMessages.API_WEATHER_ERROR);
 		}
 	}
 
