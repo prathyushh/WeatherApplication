@@ -21,7 +21,7 @@ import com.example.demo.entity.City;
 import com.example.demo.repository.CityRepository;
 
 @ExtendWith(MockitoExtension.class)
-class CityTransactionServiceTest {
+class CityPersistenceServiceTest {
 	@Mock
 	private CityRepository cityRepository;
 	@Mock
@@ -29,7 +29,7 @@ class CityTransactionServiceTest {
 	@Mock
 	private Authentication authentication;
 	@InjectMocks
-	private CityTransactionService cityTransactionService;
+	private CityPersistenceService cityPersistenceService;
 
 	@AfterEach
 	void tearDown() {
@@ -47,7 +47,7 @@ class CityTransactionServiceTest {
 		when(authentication.getName()).thenReturn("admin");
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		when(cityRepository.save(any(City.class))).thenAnswer(invocation -> invocation.getArgument(0));
-		City result = cityTransactionService.saveCityWithAudit(location);
+		City result = cityPersistenceService.saveCityWithAudit(location);
 		assertNotNull(result);
 		assertEquals("Kota", result.getCity());
 		assertEquals("Rajasthan", result.getState());

@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -62,5 +64,22 @@ class AuthControllerTest {
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		assertEquals(authResponse, response.getBody());
 		verify(authService).refreshToken(request);
+	}
+
+	@Test
+	void token_shouldReturnAccessToken() {
+		LoginRequest request = new LoginRequest();
+		request.setUsername("testuser");
+		request.setPassword("password");
+		AuthResponse authResponse = new AuthResponse();
+		authResponse.setAccessToken("test-access-token");
+		when(authService.login(request)).thenReturn(authResponse);
+		ResponseEntity<Map<String, Object>> response = authController.token("testuser", "password");
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertNotNull(response.getBody());
+		assertEquals("test-access-token", response.getBody().get("access_token"));
+		assertEquals("bearer", response.getBody().get("token_type"));
+		verify(authService).login(request);
 	}
 }

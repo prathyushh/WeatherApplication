@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
+
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
@@ -36,8 +37,8 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint,
 			CustomAccessDeniedHandler accessDeniedHandler) {
 		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
-				.requestMatchers("/auth/register", "/auth/login", "/auth/refresh", "/swagger-ui/**", "/swagger-ui.html",
-						"/v3/api-docs/**")
+				.requestMatchers("/auth/register", "/auth/login", "/auth/token", "/auth/refresh", "/swagger-ui/**",
+						"/swagger-ui.html", "/v3/api-docs/**")
 				.permitAll().requestMatchers(HttpMethod.GET, "/api/cities").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.GET, "/api/weather").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.POST, "/api/cities").hasRole("ADMIN")

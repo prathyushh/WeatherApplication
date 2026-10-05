@@ -31,7 +31,7 @@ public class CityService {
 	private final CityRepository cityRepository;
 	private final AuditService auditService;
 	private final WeatherProviderService weatherProviderService;
-	private final CityTransactionService cityTransactionService;
+	private final CityPersistenceService cityPersistenceService;
 
 	public City createCity(CityRequest cityRequest) {
 		try {
@@ -42,7 +42,7 @@ public class CityService {
 			}
 			GeocodingApiResponse location = locationProvider.findLocation(cityRequest.getCity(), cityRequest.getState(),
 					cityRequest.getCountryCode());
-			City savedCity = cityTransactionService.saveCityWithAudit(location);
+			City savedCity = cityPersistenceService.saveCityWithAudit(location);
 			log.info("City added successfully: {}, {}", savedCity.getCity(), savedCity.getState());
 			return savedCity;
 		} catch (Exception ex) {

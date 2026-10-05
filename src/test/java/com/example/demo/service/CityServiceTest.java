@@ -44,7 +44,7 @@ class CityServiceTest {
 	@Mock
 	private WeatherProviderService weatherProviderService;
 	@Mock
-	private CityTransactionService cityTransactionService;
+	private CityPersistenceService cityPersistenceService;
 	@Mock
 	private Authentication authentication;
 	@InjectMocks
@@ -71,7 +71,7 @@ class CityServiceTest {
 				.longitude(75.8648).build();
 		when(cityRepository.findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan")).thenReturn(Optional.empty());
 		when(locationProvider.findLocation("Kota", "Rajasthan", "IN")).thenReturn(location);
-		when(cityTransactionService.saveCityWithAudit(location)).thenReturn(savedCity);
+		when(cityPersistenceService.saveCityWithAudit(location)).thenReturn(savedCity);
 		City result = cityService.createCity(request);
 		assertNotNull(result);
 		assertEquals(1L, result.getId());
@@ -82,7 +82,7 @@ class CityServiceTest {
 		assertEquals(75.8648, result.getLongitude());
 		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
 		verify(locationProvider).findLocation("Kota", "Rajasthan", "IN");
-		verify(cityTransactionService).saveCityWithAudit(location);
+		verify(cityPersistenceService).saveCityWithAudit(location);
 	}
 
 	@Test
@@ -99,7 +99,7 @@ class CityServiceTest {
 		assertThrows(CityAlreadyExistsException.class, () -> cityService.createCity(request));
 		verify(cityRepository).findByCityIgnoreCaseAndStateIgnoreCase("Kota", "Rajasthan");
 		verifyNoInteractions(locationProvider);
-		verifyNoInteractions(cityTransactionService);
+		verifyNoInteractions(cityPersistenceService);
 	}
 
 	@Test

@@ -27,7 +27,7 @@ public class WeatherProviderService implements WeatherProvider {
 	@Override
 	@Cacheable(value = "weather", key = "#city.latitude + '_' + #city.longitude")
 	public WeatherResponse getWeather(City city) {
-		log.info("CACHE MISS - Calling OpenWeather API for {}, {}", city.getLatitude(), city.getLongitude());
+		log.atInfo().log("CACHE MISS - Calling OpenWeather API for {}, {}", city.getLatitude(), city.getLongitude());
 		try {
 			WeatherApiResponse response = restClient.get()
 					.uri(uriBuilder -> OpenWeatherApiUriBuilder
@@ -38,7 +38,7 @@ public class WeatherProviderService implements WeatherProvider {
 					response.getWeather().get(0).getMain(), response.getWeather().get(0).getDescription(),
 					response.getWind().getSpeed());
 		} catch (Exception ex) {
-			log.error("OpenWeather API failed for {}, {}", city.getLatitude(), city.getLongitude(), ex.getMessage());
+			log.error("OpenWeather API failed for {}, {} : {}", city.getLatitude(), city.getLongitude(), ex.getMessage());
 			throw new WeatherApiException(ExceptionMessages.API_WEATHER_ERROR);
 		}
 	}

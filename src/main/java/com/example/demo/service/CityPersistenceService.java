@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class CityTransactionService {
+public class CityPersistenceService {
 	private final CityRepository cityRepository;
 	private final AuditService auditService;
 
